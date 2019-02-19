@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <title>htm Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    img {
+      width: 100%;
+      overflow: hidden;
+    }
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <script type="module">
+    import {
+      html,
+      Component,
+      render
+    } from 'https://unpkg.com/htm/preact/standalone.mjs';
+
+    const toRad = num => {
+      return (num * Math.PI) / 180;
+    };
+    const toDeg = num => {
+      return (num * 180) / Math.PI;
+    };
+
+    const distanceFrom = (from, to) => {
+      const R = 6371; // km
+      const dLat = toRad(from.latitude - to.latitude);
+      const dLon = toRad(from.longitude - to.longitude);
+      const lat1 = toRad(to.latitude);
+      const lat2 = toRad(from.latitude);
+
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.sin(dLon / 2) *
+          Math.sin(dLon / 2) *
+          Math.cos(lat1) *
+          Math.cos(lat2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    };
+
+    const bearing = (to, from) => {
+      const dLon = toRad(from.longitude - to.longitude);
+      const lat1 = toRad(to.latitude);
+      const lat2 = toRad(from.latitude);
+      const y = Math.sin(dLon) * Math.cos(lat2);
+      const x =
+        Math.cos(lat1) * Math.sin(lat2) -
+        Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+      return toDeg(Math.atan2(y, x));
+    };
+
+    const zios = {
+      name: "Zio's",
+      latitude: 41.255448,
+      longitude: -95.931218
+    };
+
+    class App extends Component {
+      constructor() {
+        super();
+        this.state = {
+          heading: 0,
+          currentLoc: {
+            latitude: 41.276365,
+            longitude: -95.990193
+          }
+        };
+      }
+      toHeading(e) {
+        if (e.webkitCompassHeading) {
+          return e.webkitCompassHeading;
+        }
+        return 360 - e.alpha;
+      }
+      componentDidMount() {
+        window.addEventListener('deviceorientation', e => {
+          this.setState({
+            heading: this.toHeading(e),
+            alpha: e.alpha,
+            wk: e.webkitCompassHeading
+          });
+        });
+        try {
+          navigator.geolocation.watchPosition(({ coords }) => {
+            const currentLoc = {
+              latitude: coords.latitude,
+              longitude: coords.longitude
+            };
+            this.setState({ currentLoc });
+          });
+        } catch (e) {
+          alert(e);
+        }
+      }
+      render(props, state) {
+        return html`
+          <div class="app">
+            <${Header} />
+            <${PizzaCompass}
+              loc=${zios}
+              heading=${state.heading}
+              currentLoc=${state.currentLoc}
+            />
+          </div>
+        `;
+      }
+    }
+    const Pizza = ({ rotation }) => {
+      console.log(rotation);
+      const style = { transform: `rotate(${rotation}deg)` };
+      return html`
+        <img style=${style} src="thin-crust-pizza.gif" />
+      `;
+    };
+    const PizzaCompass = ({ loc, heading, currentLoc }) => {
+      const b = bearing(currentLoc, loc);
+      const headingDelta = 180 - (heading - b);
+      const distance = Math.floor(distanceFrom(currentLoc, loc) * 10) / 10;
+      console.log(distance);
+      return html`
+        <div>
+          <h1>${distance} to ${loc.name}</h1>
+          <${Pizza} rotation=${headingDelta} />
+        </div>
+      `;
+    };
+
+    const Header = () =>
+      html`
+        <h1>🍕 Compass</h1>
+      `;
+
+    render(
+      html`
+        <${App} page="All" />
+      `,
+      document.body
+    );
+  </script>
+</html>
