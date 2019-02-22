@@ -74,7 +74,12 @@
         return 360 - e.alpha;
       }
       async updateLocation(latitude, longitude) {
-        const url = `http://localhost:8081/?lat=${latitude}&lon=${longitude}`;
+        const localTesting = false;
+        const baseUrl = localTesting
+          ? 'http://localhost:8081/'
+          : 'https://us-central1-blumhouse.cloudfunctions.net/HttpHandler';
+
+        const url = `${baseUrl}?lat=${latitude}&lon=${longitude}`;
         const rawRes = await fetch(url);
         const res = await rawRes.json();
         const [closestPizza] = res;
@@ -95,14 +100,23 @@
           });
         });
         try {
-          navigator.geolocation.watchPosition(({ coords }) => {
-            const currentLoc = {
-              latitude: coords.latitude,
-              longitude: coords.longitude
-            };
-            this.setState({ currentLoc });
-            this.updateLocation(coords.latitude, coords.longitude);
-          });
+          navigator.geolocation.watchPosition(
+            ({ coords }) => {
+              const currentLoc = {
+                latitude: coords.latitude,
+                longitude: coords.longitude
+              };
+              if (
+                currentLoc.latitude !== this.state.currentLoc.latitude &&
+                currentLoc.longitude !== this.state.currentLoc.longitude
+              ) {
+                this.setState({ currentLoc });
+                this.updateLocation(coords.latitude, coords.longitude);
+              }
+            },
+            null,
+            { enableHighAccuracy: true }
+          );
         } catch (e) {
           alert(e);
         }
