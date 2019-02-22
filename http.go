@@ -7,8 +7,8 @@ import (
 
 func HttpHandler(w http.ResponseWriter, r *http.Request) {
 	// Set CORS headers for the preflight request
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if r.Method == http.MethodOptions {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 		w.Header().Set("Access-Control-Max-Age", "3600")
@@ -32,7 +32,6 @@ func HttpHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	fmt.Fprintf(w, string(v))
 }
 
