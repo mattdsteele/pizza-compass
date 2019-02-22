@@ -1,4 +1,4 @@
-module pizza
+module github.com/mattdsteele/pizza-compass
 
 require (
 	github.com/dghubble/sling v1.2.0 // indirect

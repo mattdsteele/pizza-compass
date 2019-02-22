@@ -55,12 +55,6 @@
       return toDeg(Math.atan2(y, x));
     };
 
-    const zios = {
-      name: "Zio's",
-      latitude: 41.255448,
-      longitude: -95.931218
-    };
-
     class App extends Component {
       constructor() {
         super();
@@ -69,7 +63,8 @@
           currentLoc: {
             latitude: 41.276365,
             longitude: -95.990193
-          }
+          },
+          location: null
         };
       }
       toHeading(e) {
@@ -77,6 +72,19 @@
           return e.webkitCompassHeading;
         }
         return 360 - e.alpha;
+      }
+      async updateLocation(latitude, longitude) {
+        const url = `http://localhost:8081/?lat=${latitude}&lon=${longitude}`;
+        const rawRes = await fetch(url);
+        const res = await rawRes.json();
+        const [closestPizza] = res;
+        this.setState({
+          location: {
+            name: closestPizza.name,
+            latitude: closestPizza.location.lat,
+            longitude: closestPizza.location.lng
+          }
+        });
       }
       componentDidMount() {
         window.addEventListener('deviceorientation', e => {
@@ -93,6 +101,7 @@
               longitude: coords.longitude
             };
             this.setState({ currentLoc });
+            this.updateLocation(coords.latitude, coords.longitude);
           });
         } catch (e) {
           alert(e);
@@ -103,7 +112,7 @@
           <div class="app">
             <${Header} />
             <${PizzaCompass}
-              loc=${zios}
+              loc=${state.location}
               heading=${state.heading}
               currentLoc=${state.currentLoc}
             />
@@ -119,16 +128,22 @@
       `;
     };
     const PizzaCompass = ({ loc, heading, currentLoc }) => {
-      const b = bearing(currentLoc, loc);
-      const headingDelta = 180 - (heading - b);
-      const distance = Math.floor(distanceFrom(currentLoc, loc) * 10) / 10;
-      console.log(distance);
-      return html`
-        <div>
-          <h1>${distance} to ${loc.name}</h1>
-          <${Pizza} rotation=${headingDelta} />
-        </div>
-      `;
+      if (loc && currentLoc) {
+        const b = bearing(currentLoc, loc);
+        const headingDelta = 180 - (heading - b);
+        const distance = Math.floor(distanceFrom(currentLoc, loc) * 10) / 10;
+        console.log(distance);
+        return html`
+          <div>
+            <h1>${distance} to ${loc.name}</h1>
+            <${Pizza} rotation=${headingDelta} />
+          </div>
+        `;
+      } else {
+        return html`
+          <div>Loading..</div>
+        `;
+      }
     };
 
     const Header = () =>
