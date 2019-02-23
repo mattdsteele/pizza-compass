@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-  <title>htm Demo</title>
+  <title>Pizza Compass</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    * {
+      box-sizing: border-box;
+    }
     img {
       width: 100%;
       overflow: hidden;
@@ -11,6 +14,31 @@
     body {
       width: 100%;
       height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+        Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol';
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #9ab26a;
+    }
+    h1 {
+      text-align: center;
+    }
+    footer {
+      color: white;
+      background: #5c1d11;
+    }
+    .app {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .pizza-compass {
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
     }
   </style>
   <script type="module">
@@ -77,7 +105,7 @@
         const localTesting = false;
         const baseUrl = localTesting
           ? 'http://localhost:8081/'
-          : 'https://us-central1-blumhouse.cloudfunctions.net/HttpHandler';
+          : 'https://us-central1-pizza-compass-232603.cloudfunctions.net/HttpHandler';
 
         const url = `${baseUrl}?lat=${latitude}&lon=${longitude}`;
         const rawRes = await fetch(url);
@@ -106,12 +134,14 @@
                 latitude: coords.latitude,
                 longitude: coords.longitude
               };
+              if (!this.state.location) {
+                this.updateLocation(coords.latitude, coords.longitude);
+              }
               if (
                 currentLoc.latitude !== this.state.currentLoc.latitude &&
                 currentLoc.longitude !== this.state.currentLoc.longitude
               ) {
                 this.setState({ currentLoc });
-                this.updateLocation(coords.latitude, coords.longitude);
               }
             },
             null,
@@ -123,14 +153,11 @@
       }
       render(props, state) {
         return html`
-          <div class="app">
-            <${Header} />
-            <${PizzaCompass}
-              loc=${state.location}
-              heading=${state.heading}
-              currentLoc=${state.currentLoc}
-            />
-          </div>
+          <${PizzaCompass}
+            loc=${state.location}
+            heading=${state.heading}
+            currentLoc=${state.currentLoc}
+          />
         `;
       }
     }
@@ -138,7 +165,9 @@
       console.log(rotation);
       const style = { transform: `rotate(${rotation}deg)` };
       return html`
-        <img style=${style} src="thin-crust-pizza.gif" />
+        <div class="pizza-compass">
+          <img style=${style} src="thin-crust-pizza.gif" />
+        </div>
       `;
     };
     const PizzaCompass = ({ loc, heading, currentLoc }) => {
@@ -148,9 +177,10 @@
         const distance = Math.floor(distanceFrom(currentLoc, loc) * 10) / 10;
         console.log(distance);
         return html`
-          <div>
-            <h1>${distance} to ${loc.name}</h1>
+          <div class="app">
+            <header><h1>${loc.name}</h1></header>
             <${Pizza} rotation=${headingDelta} />
+            <footer><h1>${distance} km</h1></footer>
           </div>
         `;
       } else {
@@ -160,14 +190,9 @@
       }
     };
 
-    const Header = () =>
-      html`
-        <h1>🍕 Compass</h1>
-      `;
-
     render(
       html`
-        <${App} page="All" />
+        <${App} />
       `,
       document.body
     );
