@@ -41,8 +41,9 @@ const fromNetwork = (req, timeout, putInCache = false) => {
           .then(() => {
             resolve(res);
           });
+      } else {
+        resolve(res);
       }
-      resolve(res);
     }, reject);
   });
 };
