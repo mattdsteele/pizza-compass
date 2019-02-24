@@ -29,7 +29,6 @@ const fromNetwork = (req, timeout, putInCache = false) => {
   return new Promise((resolve, reject) => {
     const timeoutId = setTimeout(reject, timeout);
     fetch(req).then(res => {
-      console.log('got data');
       clearTimeout(timeoutId);
       if (putInCache) {
         caches
@@ -53,20 +52,16 @@ const anyReqFromDomain = async req => {
   if (matching) {
     return matching;
   }
-  console.log('still nothing', req.url);
   const noQuery = await cache.matchAll(req, { ignoreSearch: true });
-  console.log('did I get anything', noQuery);
   if (noQuery) {
     return noQuery[0];
   }
 };
 const fromCache = async req => {
-  console.log('looking in cache');
   const cache = await caches.open(CACHE);
   const matching = await cache.match(req);
   if (matching) {
     return matching;
   }
-  console.log('no cache found :(', req);
   throw new Error('no match');
 };
