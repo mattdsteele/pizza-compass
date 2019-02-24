@@ -1,6 +1,7 @@
 const CACHE = 'network-or-cache';
 
 self.addEventListener('install', e => {
+  self.skipWaiting();
   e.waitUntil(precache());
 });
 
@@ -12,14 +13,12 @@ const precache = async () => {
 self.addEventListener('fetch', e => {
   const { origin } = self;
   if (origin !== new URL(e.request.url).origin) {
-    console.log('making request to elsewhere', e.request.url);
     e.respondWith(
       fromNetwork(e.request, 400, true).catch(() => {
         return anyReqFromDomain(e.request);
       })
     );
   } else {
-    console.log('making normal request', e.request.url);
     e.respondWith(
       fromNetwork(e.request, 400).catch(() => fromCache(e.request))
     );
