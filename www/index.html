@@ -43,11 +43,26 @@
     }
   </style>
   <script type="module">
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      const installing = reg.installing;
+
+      if (installing) {
+        installing.addEventListener('statechange', e => {
+          console.log(`state changed to ${e.target.state}`);
+        });
+      }
+      navigator.serviceWorker.ready.then(registration => {
+        console.log(navigator.serviceWorker.controller);
+      });
+    });
+  </script>
+  <script type="module">
     import {
       html,
       Component,
       render
     } from 'https://unpkg.com/htm/preact/standalone.mjs';
+    console.log('in module');
 
     const toRad = num => {
       return (num * Math.PI) / 180;
