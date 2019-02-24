@@ -26,26 +26,39 @@ self.addEventListener('fetch', e => {
   }
 });
 
-const fromNetwork = async (req, timeout, putInCache = false) => {
-  const timeoutId = setTimeout(() => {
-    throw new Error(`timed out ${req.url}`);
-  }, timeout);
-  try {
-    const res = await fetch(req);
-    console.log('got data');
-    clearTimeout(timeoutId);
-    if (putInCache) {
-      const cache = await caches.open(CACHE);
-      await cache.put(req, res.clone());
-    }
-    return res;
-  } catch (e) {
-    throw e;
-  }
+const fromNetwork = (req, timeout, putInCache = false) => {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(reject, timeout);
+    fetch(req).then(res => {
+      console.log('got data');
+      clearTimeout(timeoutId);
+      if (putInCache) {
+        caches
+          .open(CACHE)
+          .then(cache => {
+            return cache.put(req, res.clone());
+          })
+          .then(() => {
+            resolve(res);
+          });
+      }
+      resolve(res);
+    }, reject);
+  });
 };
 
 const anyReqFromDomain = async req => {
-  console.log('any request for this bad boy', req.url);
+  const cache = await caches.open(CACHE);
+  const matching = await cache.match(req);
+  if (matching) {
+    return matching;
+  }
+  console.log('still nothing', req.url);
+  const noQuery = await cache.matchAll(req, { ignoreSearch: true });
+  console.log('did I get anything', noQuery);
+  if (noQuery) {
+    return noQuery[0];
+  }
 };
 const fromCache = async req => {
   console.log('looking in cache');
