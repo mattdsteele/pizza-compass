@@ -7,13 +7,7 @@ self.addEventListener('install', e => {
 
 const precache = async () => {
   const cache = await self.caches.open(CACHE);
-  cache.addAll([
-    './index.html',
-    './thin-crust-pizza.gif',
-    './',
-    './app.css',
-    './pizza.js'
-  ]);
+  cache.addAll(['./index.html', './thin-crust-pizza.gif', './', './app.css']);
 };
 
 self.addEventListener('fetch', e => {
