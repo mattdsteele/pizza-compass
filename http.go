@@ -3,6 +3,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 )
 
 func HttpHandler(w http.ResponseWriter, r *http.Request) {
@@ -19,7 +20,9 @@ func HttpHandler(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	lat := q.Get("lat")
 	lon := q.Get("lon")
-	venuesJson, err := Venues(lat, lon)
+	venuesJson, limit, limitLeft, err := Venues(lat, lon)
+	w.Header().Set("X-API-Limit", strconv.Itoa(limit))
+	w.Header().Set("X-API-Limit-Left", strconv.Itoa(limitLeft))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, err)

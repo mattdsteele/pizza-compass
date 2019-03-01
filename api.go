@@ -9,7 +9,7 @@ import (
 	"github.com/peppage/foursquarego"
 )
 
-func Venues(lat, lon string) ([]foursquarego.Venue, error) {
+func Venues(lat, lon string) ([]foursquarego.Venue, int, int, error) {
 	userLat, _ := strconv.ParseFloat(lat, 64)
 	userLon, _ := strconv.ParseFloat(lon, 64)
 	httpClient := http.DefaultClient
@@ -19,20 +19,23 @@ func Venues(lat, lon string) ([]foursquarego.Venue, error) {
 	// Search Venues
 	searchParam := lat + ", " + lon
 	pizzaCat := "4bf58dd8d48988d1ca941735"
-	venues, _, err := client.Venues.Search(&foursquarego.VenueSearchParams{
+	venues, resp, err := client.Venues.Search(&foursquarego.VenueSearchParams{
 		LatLong:    searchParam,
 		CategoryID: []string{pizzaCat},
 		Intent:     foursquarego.IntentCheckin,
 	})
-	fmt.Println(venues, err)
+
 	if err != nil {
-		return nil, err
+		return nil, -1, -1, err
 	}
 	sort.Slice(venues, func(i, j int) bool {
 		iDist := Distance(venues[i].Location.Lat, venues[i].Location.Lng, userLat, userLon)
 		jDist := Distance(venues[j].Location.Lat, venues[j].Location.Lng, userLat, userLon)
 		return iDist < jDist
 	})
-	return venues, nil
+	rateLimit := foursquarego.ParseRate(resp)
+	fmt.Println(venues, err)
+	fmt.Println("Have " + strconv.Itoa(rateLimit.Remaining) + " queries left")
+	return venues, rateLimit.Limit, rateLimit.Remaining, nil
 }
 
