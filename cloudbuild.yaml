@@ -8,7 +8,4 @@ steps:
         '--trigger-http',
         '--runtime',
         'go111',
-        '--entry-point',
-        'HttpHandler',
       ]
-    dir: 'functions/autodeploy'
