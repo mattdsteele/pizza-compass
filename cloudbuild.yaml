@@ -5,6 +5,7 @@ steps:
         'functions',
         'deploy',
         'HttpHandler',
+        '--trigger',
         'http',
         '--runtime',
         'go111',
