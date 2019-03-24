@@ -22,20 +22,29 @@ func Venues(lat, lon string) ([]foursquarego.Venue, int, int, error) {
 	venues, resp, err := client.Venues.Search(&foursquarego.VenueSearchParams{
 		LatLong:    searchParam,
 		CategoryID: []string{pizzaCat},
-		Intent:     foursquarego.IntentCheckin,
+		Radius:     8000,
+		Intent:     foursquarego.IntentBrowse,
 	})
 
 	if err != nil {
 		return nil, -1, -1, err
 	}
-	sort.Slice(venues, func(i, j int) bool {
-		iDist := Distance(venues[i].Location.Lat, venues[i].Location.Lng, userLat, userLon)
-		jDist := Distance(venues[j].Location.Lat, venues[j].Location.Lng, userLat, userLon)
+	pizzaVenues := []foursquarego.Venue{}
+	for _, venue := range venues {
+		for _, cat := range venue.Categories {
+			if cat.ID == pizzaCat {
+				pizzaVenues = append(pizzaVenues, venue)
+			}
+		}
+	}
+	sort.Slice(pizzaVenues, func(i, j int) bool {
+		iDist := Distance(pizzaVenues[i].Location.Lat, pizzaVenues[i].Location.Lng, userLat, userLon)
+		jDist := Distance(pizzaVenues[j].Location.Lat, pizzaVenues[j].Location.Lng, userLat, userLon)
 		return iDist < jDist
 	})
 	rateLimit := foursquarego.ParseRate(resp)
 	fmt.Println(venues, err)
 	fmt.Println("Have " + strconv.Itoa(rateLimit.Remaining) + " queries left")
-	return venues, rateLimit.Limit, rateLimit.Remaining, nil
+	return pizzaVenues, rateLimit.Limit, rateLimit.Remaining, nil
 }
 
