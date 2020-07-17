@@ -7,5 +7,5 @@ steps:
         'HttpHandler',
         '--trigger-http',
         '--runtime',
-        'go111',
+        'go113',
       ]
